@@ -49,7 +49,15 @@ router.get('/recommended', authenticateToken, async (req: AuthRequest, res: Resp
 // Get dynamic system configuration (categories, education levels, topic tags)
 router.get('/meta/options', async (_req, res: Response): Promise<any> => {
   try {
-    const categories = ['TNPSC', 'CINEMA', 'GENERAL_GK', 'SCIENCE', 'SPORTS'];
+    const categories = [
+      'SPEED_LUDO',
+      'FRUIT_SLICER',
+      'KNIFE_HIT',
+      'SPEED_MATH',
+      'TAMIL_QUIZ',
+      'CINEMA',
+      'GENERAL_GK',
+    ];
     const educationLevels = [
       { label: 'School (Below 10th)', value: 'BELOW_10TH' },
       { label: '10th / +2 Passed', value: 'TENTH_PLUS_TWO' },

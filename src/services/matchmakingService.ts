@@ -72,7 +72,15 @@ export class MatchmakingService {
    * Get all categories with room counts
    */
   static async getCategoryStats() {
-    const categories = ['TNPSC', 'CINEMA', 'GENERAL_GK', 'SCIENCE', 'SPORTS'];
+    const categories = [
+      'SPEED_LUDO',
+      'FRUIT_SLICER',
+      'KNIFE_HIT',
+      'SPEED_MATH',
+      'TAMIL_QUIZ',
+      'CINEMA',
+      'GENERAL_GK',
+    ];
     const stats = [];
 
     for (const cat of categories) {
