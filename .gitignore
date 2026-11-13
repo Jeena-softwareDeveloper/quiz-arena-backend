@@ -4,9 +4,6 @@ node_modules/
 # Production build
 dist/
 
-# Environment variables
-.env
-
 # SQLite Database files
 *.db
 *.db-journal
@@ -22,3 +19,4 @@ yarn-error.log*
 # OS metadata
 .DS_Store
 Thumbs.db
+
