@@ -1,0 +1,143 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                 String            @id @default(uuid())
+  phone              String            @unique
+  name               String
+  email              String?           @default("user@example.com")
+  password           String
+  role               String            @default("USER") // "USER" | "ADMIN" | "BOT"
+  educationLevel     String            @default("DEGREE") // "BELOW_10TH" | "TENTH_PLUS_TWO" | "DIPLOMA" | "DEGREE" | "POST_GRADUATE"
+  examInterests      String            @default("TNPSC,GENERAL_GK") // Comma-separated or JSON array string
+  skillRating        Int               @default(1000)
+  walletBalance      Float             @default(50.0) // Welcome bonus ₹50
+  languagePreference String            @default("EN") // "EN" | "TA"
+  isBot              Boolean           @default(false)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  walletLedgers      WalletLedger[]
+  participations     RoomParticipant[]
+  questionHistory    UserQuestionHistory[]
+}
+
+model WalletLedger {
+  id           String   @id @default(uuid())
+  userId       String
+  type         String   // "CREDIT" | "DEBIT"
+  category     String   // "WELCOME_BONUS" | "RECHARGE" | "ENTRY_FEE" | "PRIZE_WON" | "WITHDRAWAL"
+  amount       Float
+  balanceAfter Float
+  description  String
+  referenceId  String?  // Room ID or Gateway Payment ID
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Question {
+  id                String   @id @default(uuid())
+  category          String   // "TNPSC" | "CINEMA" | "SCIENCE" | "SPORTS" | "GENERAL_GK"
+  subCategory       String?  // "Tamil Literature", "History", "Physics", "2000s Kollywood"
+  difficulty        String   @default("MEDIUM") // "EASY" | "MEDIUM" | "HARD"
+  targetEducation   String   @default("ALL") // "ALL" | "SCHOOL" | "GRADUATE"
+  questionText      String
+  questionTextTamil String?
+  options           String   // JSON stringified array of 4 options
+  correctIndex      Int      // 0, 1, 2, or 3
+  explanation       String?
+  timesUsed         Int      @default(0) // Track how many rooms this question was featured in
+  lastUsedAt        DateTime?
+  createdAt         DateTime @default(now())
+
+  userHistory       UserQuestionHistory[]
+}
+
+model UserQuestionHistory {
+  id         String   @id @default(uuid())
+  userId     String
+  questionId String
+  roomId     String?
+  wasCorrect Boolean  @default(false)
+  answeredAt DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+  @@index([userId])
+}
+
+model QuizRoom {
+  id                 String            @id @default(uuid())
+  title              String
+  category           String            // "TNPSC" | "CINEMA" | "GENERAL_GK" | "SCIENCE"
+  targetEducation    String            @default("ALL") // "ALL" | "SCHOOL" | "GRADUATE"
+  minSkillRating     Int               @default(0)
+  maxSkillRating     Int               @default(9999)
+  entryFee           Float             @default(10.0)
+  prizePool          Float             @default(80.0)
+  maxPlayers         Int               @default(20)
+  status             String            @default("SCHEDULED") // "SCHEDULED" | "WAITING" | "COUNTDOWN" | "LIVE" | "WAITING_RESULTS" | "FINISHED" | "CANCELLED"
+  roundDurationSec   Int               @default(10)
+  totalQuestions     Int               @default(5)
+  questionIds        String            // JSON string array of Question IDs
+  scheduledStartTime DateTime?
+  scheduledEndTime   DateTime?
+  joinWindowMinutes  Int               @default(10) // Minutes before scheduledStartTime when players can enter arena
+  botCount           Int               @default(5) // Number of simulated bots in this room
+  winnerStrategy     String            @default("HUMAN_PRIORITY") // "BOT_PRIORITY" | "HUMAN_PRIORITY" | "MERIT"
+  targetWinnerType   String            @default("HUMAN") // "HUMAN" | "BOT"
+  designatedWinnerId String?           // Optional Admin override for designated winner
+  resultsReleased    Boolean           @default(false)
+  resultsReleasedAt  DateTime?
+  scheduledAt        DateTime?
+  createdAt          DateTime          @default(now())
+
+  participants       RoomParticipant[]
+}
+
+model RoomParticipant {
+  id                String   @id @default(uuid())
+  roomId            String
+  userId            String
+  isBot             Boolean  @default(false)
+  botName           String?
+  score             Int      @default(0)
+  correctAnswers    Int      @default(0)
+  totalAnswerTimeMs Int      @default(0)
+  rank              Int?
+  prizeWon          Float    @default(0.0)
+  preRegisteredAt   DateTime @default(now())
+  hasJoinedArena    Boolean  @default(false)
+  joinedAt          DateTime @default(now())
+
+  room              QuizRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId])
+}
+
+model Banner {
+  id              String   @id @default(uuid())
+  title           String
+  titleTamil      String?
+  subtitle        String?
+  subtitleTamil   String?
+  imageUrl        String
+  actionType      String   @default("PLAY_NOW") // "PLAY_NOW" | "CATEGORY" | "ROOM" | "URL"
+  actionTarget    String?  // Category name or room ID or external link
+  actionText      String   @default("Play Now")
+  actionTextTamil String?  @default("இப்போதே விளையாடு")
+  isActive        Boolean  @default(true)
+  order           Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
