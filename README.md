@@ -1,6 +1,6 @@
 # quiz-arena-backend
 
-High-performance real-time backend service for the **Quiz Arena** multi-tier skill tournament platform. Built with Node.js, Express, TypeScript, Prisma ORM, and Socket.IO.
+High-performance real-time backend service for the **Set Quick Trade** multi-tier skill tournament platform. Built with Node.js, Express, TypeScript, Prisma ORM, and Socket.IO.
 
 ## 🚀 Features
 

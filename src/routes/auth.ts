@@ -7,18 +7,36 @@ import { authenticateToken, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
-// Register new user with educational profiling & language preference
+// Register new user with Email or Phone
 router.post('/register', async (req, res): Promise<any> => {
   try {
-    const { phone, password, name, email, educationLevel, examInterests, languagePreference } = req.body;
+    const { email, phone, password, name, educationLevel, examInterests, languagePreference } = req.body;
 
-    if (!phone || !password || !name) {
-      return res.status(400).json({ error: 'Phone, password, and name are required' });
+    const userEmail = email ? String(email).trim().toLowerCase() : '';
+    const userPhone = phone ? String(phone).trim() : '';
+
+    if ((!userEmail && !userPhone) || !password || !name) {
+      return res.status(400).json({ error: 'Email, name, and password are required' });
     }
 
-    const existing = await prisma.user.findUnique({ where: { phone } });
-    if (existing) {
-      return res.status(400).json({ error: 'Phone number already registered' });
+    // Check if email already registered
+    if (userEmail) {
+      const existingEmail = await prisma.user.findFirst({ where: { email: userEmail } });
+      if (existingEmail) {
+        return res.status(400).json({ error: 'Email address already registered. Please sign in.' });
+      }
+    }
+
+    // If phone is provided, check uniqueness; otherwise generate unique placeholder phone
+    let finalPhone = userPhone;
+    if (finalPhone) {
+      const existingPhone = await prisma.user.findUnique({ where: { phone: finalPhone } });
+      if (existingPhone) {
+        return res.status(400).json({ error: 'Phone number already registered' });
+      }
+    } else {
+      // Generate unique random 10-digit number
+      finalPhone = '9' + Math.floor(100000000 + Math.random() * 900000000);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -30,10 +48,10 @@ router.post('/register', async (req, res): Promise<any> => {
     // Create user and give ₹50 free welcome bonus
     const user = await prisma.user.create({
       data: {
-        phone,
+        phone: finalPhone,
         password: hashedPassword,
-        name,
-        email: email || `${phone}@quizarena.com`,
+        name: name.trim(),
+        email: userEmail || `${finalPhone}@quicktrade.com`,
         languagePreference: languagePreference || 'EN',
         educationLevel: validEducation,
         examInterests: validInterests,
@@ -55,7 +73,7 @@ router.post('/register', async (req, res): Promise<any> => {
     });
 
     const token = jwt.sign(
-      { id: user.id, phone: user.phone, role: user.role },
+      { id: user.id, phone: user.phone, role: user.role, email: user.email },
       CONFIG.JWT_SECRET,
       { expiresIn: CONFIG.JWT_EXPIRES_IN as any }
     );
@@ -81,26 +99,37 @@ router.post('/register', async (req, res): Promise<any> => {
   }
 });
 
-// Login
+// Login with Email or Phone
 router.post('/login', async (req, res): Promise<any> => {
   try {
-    const { phone, password } = req.body;
-    if (!phone || !password) {
-      return res.status(400).json({ error: 'Phone and password are required' });
+    const { email, phone, identifier, password } = req.body;
+    const loginQuery = (email || phone || identifier || '').trim();
+
+    if (!loginQuery || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    const user = await prisma.user.findUnique({ where: { phone } });
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: loginQuery.toLowerCase() },
+          { email: loginQuery },
+          { phone: loginQuery },
+        ],
+      },
+    });
+
     if (!user) {
-      return res.status(401).json({ error: 'Invalid phone or password' });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ error: 'Invalid phone or password' });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     const token = jwt.sign(
-      { id: user.id, phone: user.phone, role: user.role },
+      { id: user.id, phone: user.phone, role: user.role, email: user.email },
       CONFIG.JWT_SECRET,
       { expiresIn: CONFIG.JWT_EXPIRES_IN as any }
     );
@@ -126,6 +155,7 @@ router.post('/login', async (req, res): Promise<any> => {
 });
 
 // Get current profile
+
 router.get('/me', authenticateToken, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
     const user = await prisma.user.findUnique({

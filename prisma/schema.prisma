@@ -141,3 +141,15 @@ model Banner {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
+
+model OnboardingSlide {
+  id        String   @id @default(uuid())
+  title     String
+  subtitle  String?  // Text / Paragraph
+  imageUrl  String   // Cloudinary or server uploaded URL
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+

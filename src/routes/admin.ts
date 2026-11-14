@@ -5,6 +5,7 @@ import { authenticateToken, requireAdmin } from '../middleware/auth';
 import { RoomEngine } from '../services/roomEngine';
 import { BotEngine } from '../services/botEngine';
 import { QuestionRotationService } from '../services/questionRotationService';
+import { uploadImage } from '../services/uploadService';
 
 const router = Router();
 
@@ -558,4 +559,112 @@ router.delete('/banners/:id', async (req, res: Response): Promise<any> => {
   }
 });
 
+// ==========================================
+// IMAGE UPLOAD (CLOUDINARY / LOCAL FALLBACK)
+// ==========================================
+router.post('/upload', async (req, res: Response): Promise<any> => {
+  try {
+    const { image } = req.body;
+    if (!image) {
+      return res.status(400).json({ error: 'Image data is required' });
+    }
+    const hostHeader = req.get('host');
+    const result = await uploadImage(image, hostHeader);
+    return res.json(result);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// ==========================================
+// ONBOARDING SLIDES MANAGEMENT (ADMIN)
+// ==========================================
+
+// Get all onboarding slides
+router.get('/onboarding', async (_req, res: Response): Promise<any> => {
+  try {
+    const slides = await prisma.onboardingSlide.findMany({
+      orderBy: [{ order: 'asc' }, { createdAt: 'desc' }],
+    });
+    return res.json(slides);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Create new onboarding slide
+router.post('/onboarding', async (req, res: Response): Promise<any> => {
+  try {
+    const { title, subtitle, imageUrl, order, isActive } = req.body;
+
+    if (!title || !imageUrl) {
+      return res.status(400).json({ error: 'Title and Image are required' });
+    }
+
+    // Process image through upload service if it's base64 data
+    let finalImageUrl = imageUrl;
+    if (imageUrl.startsWith('data:image')) {
+      const uploadRes = await uploadImage(imageUrl, req.get('host'));
+      finalImageUrl = uploadRes.url;
+    }
+
+    const slide = await prisma.onboardingSlide.create({
+      data: {
+        title,
+        subtitle: subtitle || null,
+        imageUrl: finalImageUrl,
+        order: order !== undefined ? Number(order) : 0,
+        isActive: isActive !== undefined ? Boolean(isActive) : true,
+      },
+    });
+
+    return res.status(201).json(slide);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Update onboarding slide
+router.put('/onboarding/:id', async (req, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params;
+    const { title, subtitle, imageUrl, order, isActive } = req.body;
+
+    const data: any = {};
+    if (title !== undefined) data.title = title;
+    if (subtitle !== undefined) data.subtitle = subtitle;
+    if (imageUrl !== undefined) {
+      if (imageUrl.startsWith('data:image')) {
+        const uploadRes = await uploadImage(imageUrl, req.get('host'));
+        data.imageUrl = uploadRes.url;
+      } else {
+        data.imageUrl = imageUrl;
+      }
+    }
+    if (order !== undefined) data.order = Number(order);
+    if (isActive !== undefined) data.isActive = Boolean(isActive);
+
+    const slide = await prisma.onboardingSlide.update({
+      where: { id },
+      data,
+    });
+
+    return res.json(slide);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete onboarding slide
+router.delete('/onboarding/:id', async (req, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params;
+    await prisma.onboardingSlide.delete({ where: { id } });
+    return res.json({ success: true, message: 'Onboarding slide deleted successfully' });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;
+

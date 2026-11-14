@@ -467,6 +467,40 @@ async function main() {
     },
   });
 
+  // Seed default onboarding slides if none exist
+  const existingSlidesCount = await prisma.onboardingSlide.count();
+  if (existingSlidesCount === 0) {
+    await prisma.onboardingSlide.createMany({
+      data: [
+        {
+          title: 'Predict Green or Red',
+          subtitle: 'Guess the next price move and earn up to 90% profit',
+          imageUrl: 'https://images.unsplash.com/photo-1622979135225-d2ba269bc1df?w=800&q=80',
+          order: 1,
+          isActive: true,
+        },
+        {
+          title: 'Instant 60s Payouts',
+          subtitle: 'Fast 1-minute prediction rounds with lightning instant profit',
+          imageUrl: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80',
+          order: 2,
+          isActive: true,
+        },
+        {
+          title: 'Claim ₹50 Free Bonus',
+          subtitle: 'Start trading with zero risk and withdraw directly to UPI Bank',
+          imageUrl: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&q=80',
+          order: 3,
+          isActive: true,
+        },
+      ],
+    });
+    console.log('✅ Seeded 3 Default Onboarding Slides!');
+  }
+
+  console.log('✅ Seeded 4 Scheduled Tournaments with Pre-Registration & Timing!');
+
+
   console.log('✅ Seeded 4 Scheduled Tournaments with Pre-Registration & Timing!');
   console.log('🎉 Seeding Completed Successfully!');
 }

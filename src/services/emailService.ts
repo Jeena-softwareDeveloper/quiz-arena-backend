@@ -59,7 +59,7 @@ export class EmailService {
       const subject = `Confirmed: Your Tournament Slot for "${roomTitle}"!`;
       const html = `
         <div style="font-family: Arial, sans-serif; max-width: 550px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
-          <h2 style="color: #059669; margin-bottom: 4px;">Quiz Arena Tournament Confirmation</h2>
+          <h2 style="color: #d97706; margin-bottom: 4px;">Set Quick Trade Tournament Confirmation</h2>
           <p style="color: #475569; font-size: 14px;">Hello <strong>${userName}</strong>,</p>
           <p style="color: #334155; font-size: 14px;">Your registration for the upcoming skill quiz battle has been confirmed.</p>
           
@@ -75,13 +75,13 @@ export class EmailService {
             ⚠️ <strong>Important Rule:</strong> You must join the live arena during the joining window. Late entries are strictly locked once the battle starts!
           </div>
 
-          <p style="color: #64748b; font-size: 12px; margin-top: 20px; text-align: center;">Quiz Arena Live Skill Tournaments • Good Luck!</p>
+          <p style="color: #64748b; font-size: 12px; margin-top: 20px; text-align: center;">Set Quick Trade Live Skill Tournaments • Good Luck!</p>
         </div>
       `;
 
       const transporter = this.getTransporter();
       await transporter.sendMail({
-        from: '"Quiz Arena" <arena@quizplatform.com>',
+        from: '"Set Quick Trade" <arena@quizplatform.com>',
         to: toEmail || 'player@quizarena.com',
         subject,
         html,
@@ -106,27 +106,27 @@ export class EmailService {
       const subject = `Results Released: ${roomTitle} - You Ranked #${rank}!`;
       const html = `
         <div style="font-family: Arial, sans-serif; max-width: 550px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
-          <h2 style="color: #059669;">Tournament Results Announced!</h2>
+          <h2 style="color: #d97706;">Tournament Results Announced!</h2>
           <p>Hello <strong>${userName}</strong>,</p>
           <p>The Master Admin has officially released the final results for <strong>${roomTitle}</strong>.</p>
           
-          <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 14px; margin: 16px 0; text-align: center;">
-            <h3 style="color: #065f46; margin: 0;">Rank: #${rank}</h3>
+          <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 14px; margin: 16px 0; text-align: center;">
+            <h3 style="color: #78350f; margin: 0;">Rank: #${rank}</h3>
             ${
               prizeWon > 0
-                ? `<p style="color: #047857; font-size: 18px; font-weight: bold; margin: 6px 0;">🎉 You won ₹${prizeWon}!</p>
-                   <p style="color: #065f46; font-size: 12px;">Prize has been credited to your Quiz Arena wallet balance.</p>`
+                ? `<p style="color: #b45309; font-size: 18px; font-weight: bold; margin: 6px 0;">🎉 You won ₹${prizeWon}!</p>
+                   <p style="color: #78350f; font-size: 12px;">Prize has been credited to your Set Quick Trade wallet balance.</p>`
                 : `<p style="color: #475569; font-size: 13px; margin: 6px 0;">Thank you for competing! Better luck next tournament.</p>`
             }
           </div>
           
-          <p style="color: #64748b; font-size: 12px; text-align: center;">Quiz Arena</p>
+          <p style="color: #64748b; font-size: 12px; text-align: center;">Set Quick Trade</p>
         </div>
       `;
 
       const transporter = this.getTransporter();
       await transporter.sendMail({
-        from: '"Quiz Arena" <arena@quizplatform.com>',
+        from: '"Set Quick Trade" <arena@quizplatform.com>',
         to: toEmail || 'player@quizarena.com',
         subject,
         html,
